@@ -1,18 +1,19 @@
-name: verificare
+name: checks
 on: [push, pull_request]
 jobs:
-  test:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: python -m compileall -q tender_intelligence tests
-      - run: python -m unittest discover -s tests -v
-      - run: python - <<'PY'
-          from pathlib import Path
-          text = '\n'.join(p.read_text() for p in Path('.').rglob('*') if p.is_file() and '.git' not in p.parts)
-          forbidden = ('http' + '://', 'http' + 's://', 'openai.com', 'gov.ro')
-          assert not any(x in text for x in forbidden), 'posibil URL/claim real în fixture'
-        PY
-      - run: node --check static/app.js
+        with: { python-version: '3.12' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      - run: python3 -m unittest discover -s tests -v
+      - run: npm run check
+      - run: npm test -- --run
+      - run: npm run build
+      - name: synthetic and secret guard
+        run: |
+          ! rg -nP 'https?://(?!127\.0\.0\.1)|api[_-]?key|token|password|@gmail|licitat' --glob '!package-lock.json' --glob '!*.md' --glob '!node_modules/**' --glob '!static/assets/**' .
