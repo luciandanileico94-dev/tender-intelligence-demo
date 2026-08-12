@@ -50,8 +50,8 @@ bază ale UI-ului.
 
 ### Capturi reale
 
-Imaginile sunt capturi generate din preview-ul static build-uit, pe viewport
-desktop și mobile, cu datele sintetice din demo: [`dashboard-desktop.png`](docs/screenshots/dashboard-desktop.png)
+Imaginile sunt capturi reale ale preview-ului static, pe viewport desktop și
+mobile, cu datele sintetice din demo: [`dashboard-desktop.png`](docs/screenshots/dashboard-desktop.png)
 și [`dashboard-mobile.png`](docs/screenshots/dashboard-mobile.png).
 
 Workflow-ul [CI](.github/workflows/ci.yml) rulează unittest Python, TypeScript

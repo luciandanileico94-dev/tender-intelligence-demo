@@ -1,9 +1,18 @@
 import { expect, test } from '@playwright/test';
 
 test('static synthetic dashboard supports filtering, selection, evidence, and basic accessibility', async ({ page }) => {
+  const browserErrors: string[] = [];
+  page.on('console', message => {
+    if (message.type() === 'error') browserErrors.push(`console: ${message.text()}`);
+  });
+  page.on('pageerror', error => browserErrors.push(`pageerror: ${error.message}`));
+  page.on('requestfailed', request => {
+    browserErrors.push(`requestfailed: ${request.method()} ${request.url()} ${request.failure()?.errorText ?? ''}`);
+  });
+
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Tender Intelligence' })).toBeVisible();
-  await page.getByRole('button', { name: 'Schimbă' }).click();
+  await expect(page.getByText('Demo static')).toBeVisible();
 
   const search = page.getByRole('textbox', { name: 'Caută în dosare' });
   await expect(search).toHaveAttribute('placeholder', 'Titlu, cumpărător sau ID');
@@ -19,4 +28,5 @@ test('static synthetic dashboard supports filtering, selection, evidence, and ba
   await expect(page.getByText('fixture://syn-001/caiet')).toBeVisible();
   await page.getByRole('button', { name: 'Închide' }).click();
   await expect(page.getByRole('heading', { name: 'Caiet tehnic' })).toHaveCount(0);
+  expect(browserErrors).toEqual([]);
 });
