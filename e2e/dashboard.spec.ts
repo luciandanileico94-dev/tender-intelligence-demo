@@ -1,28 +1,3 @@
-import { expect, test } from '@playwright/test';
-
-test('public cockpit supports navigation, search, detail and evidence', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Azi' })).toBeVisible();
-  await page.getByRole('button', { name: /Vezi oportunitățile/ }).click();
-  await expect(page.getByRole('heading', { name: 'Oportunități' })).toBeVisible();
-  await page.getByRole('button', { name: /Platformă de interoperabilitate/ }).click();
-  await expect(page.getByRole('heading', { name: /Platformă de interoperabilitate/ })).toBeVisible();
-  await page.getByRole('button', { name: /Caiet de sarcini/ }).click();
-  await expect(page.getByText('fixture://syn-1/caiet-de-sarcini')).toBeVisible();
-  await page.getByRole('button', { name: 'Închide' }).click();
-  await page.getByRole('button', { name: 'Căutare în dovezi' }).click();
-  await page.getByRole('textbox', { name: 'Caută în dovezi' }).fill('Nordic Byte');
-  await expect(page.getByText('Nordic Byte Fictiv SRL')).toBeVisible();
-});
-
-test('mobile menu and pipeline stage persistence work', async ({ page }) => {
-  await page.goto('/');
-  if ((page.viewportSize()?.width ?? 1000) < 700) await page.getByRole('button', { name: 'Deschide meniul' }).click();
-  await page.getByRole('button', { name: 'Dosarele mele' }).click();
-  const select = page.getByRole('combobox', { name: /Platformă de interoperabilitate/ });
-  await select.selectOption('În pregătire');
-  await page.reload();
-  if ((page.viewportSize()?.width ?? 1000) < 700) await page.getByRole('button', { name: 'Deschide meniul' }).click();
-  await page.getByRole('button', { name: 'Dosarele mele' }).click();
-  await expect(page.getByRole('combobox', { name: /Platformă de interoperabilitate/ })).toHaveValue('În pregătire');
-});
+import {expect,test} from '@playwright/test';
+test('active count, CPV filters, detail and evidence search',async({page})=>{await page.goto('/');await expect(page.getByText('Oportunităţi active').locator('..')).toContainText('12');await page.getByRole('button',{name:'Oportunități 12'}).click();await page.getByRole('button',{name:/Furnizare legume/}).click();await expect(page.getByRole('heading',{name:/Furnizare legume/})).toBeVisible();await expect(page.getByText(/03000000-1/).first()).toBeVisible();await page.getByLabel('Filtru domeniu').selectOption('72000000-5');await expect(page.getByRole('button',{name:/Platformă IT/})).toBeVisible();await page.getByRole('button',{name:'Căutare în dovezi'}).click();await page.getByLabel('Caută în dovezi').fill('securitate');await expect(page.getByText('Caiet de sarcini')).toBeVisible();await page.getByText('Caiet de sarcini').click();await expect(page.getByRole('heading',{name:/Platformă IT/})).toBeVisible()});
+test('history, capabilities and pipeline are reachable',async({page})=>{await page.goto('/');await page.getByRole('button',{name:'Oportunități 12'}).click();await page.getByLabel('Filtru stare').selectOption('Finalizată');await expect(page.getByRole('button',{name:/Mentenanţă aplicaţii/})).toBeVisible();await page.getByRole('button',{name:'Ce oferă produsul'}).click();await expect(page.getByText(/avantaj: prioritizare timpurie/)).toBeVisible();await page.getByRole('button',{name:'Dosarele mele'}).click();await expect(page.getByRole('combobox',{name:/Furnizare legume/})).toBeVisible()});

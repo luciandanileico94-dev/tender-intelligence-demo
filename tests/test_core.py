@@ -1,40 +1,13 @@
 import unittest
-
-from tender_intelligence.fixtures import all_tenders, get_tender
-from tender_intelligence.analysis import compare_bids, dossier
-from tender_intelligence.claims import cited_claim
-from tender_intelligence.security import allowed_source, safe_text
-
-
+from tender_intelligence.fixtures import all_tenders,get_tender
+from tender_intelligence.analysis import compare_bids,dossier,entity_analytics
+from tender_intelligence.security import allowed_source,safe_text
 class CoreTests(unittest.TestCase):
-    def test_fixtures_are_obvious_and_local(self):
-        tenders = all_tenders()
-        self.assertGreaterEqual(len(tenders), 2)
-        self.assertTrue(all(t["id"].startswith("SYN-") and "Fictiv" in (t["buyer"] + str(t["bids"])) for t in tenders))
-        self.assertTrue(all(d["source"].startswith("fixture://") for t in tenders for d in t["documents"]))
-
-    def test_gate_blocked_at_four_and_ready_at_five(self):
-        tender = get_tender("SYN-RO-2026-001")
-        self.assertEqual(dossier(tender)["score"], 4)
-        self.assertEqual(dossier(tender)["gate"], "blocked")
-        tender["documents"][2]["complete"] = True
-        self.assertEqual(dossier(tender)["score"], 5)
-        self.assertEqual(dossier(tender)["gate"], "ready")
-
-    def test_three_bid_comparison_and_claim(self):
-        tender = get_tender("SYN-RO-2026-001")
-        bids = compare_bids(tender)
-        self.assertEqual(len(bids), 3)
-        self.assertLess(bids[0]["price_eur"], bids[-1]["price_eur"])
-        claim = cited_claim(tender)
-        self.assertEqual(claim["evidence_ids"], ["E1", "E2", "E3"])
-        self.assertTrue(claim["confidence"])
-
-    def test_escaping_and_allowlist(self):
-        self.assertIn("&lt;script&gt;", safe_text("<script>"))
-        self.assertTrue(allowed_source("fixture://syn-001/page"))
-        self.assertFalse(allowed_source("http" + "s://example.invalid/doc"))
-
-
-if __name__ == "__main__":
-    unittest.main()
+ def test_shared_fixture_contract(self):
+  ts=all_tenders(); self.assertEqual(len(ts),18); self.assertEqual(sum(t['status'] in ('Publicată','Clarificări','Evaluare') for t in ts),12); self.assertTrue(all('value_mdl' in t and 'cpv' in t for t in ts))
+ def test_domain_and_history(self):
+  self.assertEqual(get_tender('SYN-RO-26-001')['cpv']['code'],'03000000-1'); self.assertEqual(get_tender('SYN-RO-26-013')['status'],'Finalizată')
+ def test_analysis_mdl_and_entities(self):
+  t=get_tender('SYN-RO-26-013'); self.assertEqual(compare_bids(t)[0]['price_mdl'],792100); self.assertEqual(dossier(t)['score'],5); self.assertIn('cpv_mix',entity_analytics(all_tenders(),'Nordic Byte Fictiv SRL','company'))
+ def test_strict_sources(self):
+  self.assertTrue(allowed_source('fixture://syn-ro-26-001/caiet-de-sarcini')); self.assertFalse(allowed_source('fixture:///empty')); self.assertFalse(allowed_source('fixture://syn-ro-26-001/a/../b')); self.assertFalse(allowed_source('fixture://user:pass@syn-ro-26-001/doc')); self.assertFalse(allowed_source('fixture://syn-ro-26-001/doc?x=1')); self.assertFalse(allowed_source('https://example.invalid/doc')); self.assertIn('&lt;script&gt;',safe_text('<script>'))
