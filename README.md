@@ -1,17 +1,29 @@
-# Tender Intelligence — portfolio demo
+# Tender Intelligence — demo sintetic
 
-A clean public portfolio edition of a private personal tender-analysis tool. It will demonstrate a browser dashboard backed by Python services that process a small synthetic procurement dataset.
+Demonstrație locală, clean-room, pentru analiza unui dosar de achiziție. Toate
+înregistrările sunt evident fictive (`SYN-*`, cumpărători și firme „Fictiv”);
+nu există date de producție, documente reale, contacte, identificatori reali,
+afirmații guvernamentale, rețea sau LLM.
 
-## Evidence for the tender
+## Pornire
 
-- **Python** data-processing scripts and a small service API
-- JavaScript / TypeScript dashboard with REST integration
-- Data filtering, validation and reproducible test fixtures
-- Automated Python and browser-level tests
-- GitHub Actions and documented collaborative Git workflow
+Necesită Python 3.12 și folosește doar biblioteca standard:
 
-## Privacy and scope
+```sh
+python -m tender_intelligence.api
+```
 
-No real procurement cache, contact information, credentials, user data or private Git history is included. All future example records are synthetic and clearly marked as such.
+Comanda servește și UI-ul live la aceeași origine: `http://127.0.0.1:8000/`.
+API-ul este intenționat minimal și local.
 
-Source code, screenshots, runnable instructions and a live demonstration will be added to this stable repository URL.
+## Ce demonstrează
+
+- filtrarea listei și detaliul unei licitații;
+- comparația exactă a trei oferte;
+- completitudinea documentelor și poarta blocată la 4/5, pregătită la 5/5;
+- afirmație citată cu ID-uri de dovezi, sursă, pagină, offset, încredere și
+  incertitudine;
+- escape pentru text și allowlist pentru schemele `fixture://`.
+
+Verificarea CI compilează Python, rulează testele unittest, caută URL-uri/date
+reale în conținut și verifică sintaxa JavaScript. Nu sunt incluse screenshot-uri.
