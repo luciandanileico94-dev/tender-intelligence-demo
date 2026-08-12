@@ -1,59 +1,52 @@
 # Tender Intelligence — demo sintetic (React + TypeScript)
 
-Demonstrație locală, clean-room, pentru analiza unui dosar de achiziție. Toate
-înregistrările sunt evident fictive (`SYN-*`, cumpărători și firme „Fictiv”);
-nu există date de producție, documente reale, contacte, identificatori reali,
-afirmații guvernamentale, rețea sau LLM.
+Demonstrație clean-room pentru analiza unui dosar de achiziție. Toate datele
+sunt sintetice (`SYN-*`, cumpărători și firme „Fictiv”), iar sursele folosesc
+schema `fixture://`. Nu sunt folosite date private, secrete, servicii externe
+sau rețea în fluxul demo.
 
-## Stack
+## Stack și arhitectură
 
-React 19, TypeScript, Vite și CSS fără UI kit; API-ul este Python 3.12 stdlib.
-Setul de date este fixture local, iar fiecare sursă este `fixture://`.
+- UI: [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/), cu intrarea în [`frontend/main.tsx`](frontend/main.tsx) și componenta [`frontend/App.tsx`](frontend/App.tsx).
+- State cross-component: [Redux Toolkit](https://redux-toolkit.js.org/) — [store și slice](frontend/store.ts) gestionează filtrul, selecția dosarului și evidence drawer; acțiunile sunt folosite direct de UI.
+- API Python REST: [`tender_intelligence/api.py`](tender_intelligence/api.py) expune `GET /api/tenders` și `GET /api/tenders/{id}`. [Analiza criteriilor](tender_intelligence/analysis.py) și fixture-urile sunt locale.
+- Teste UI: [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) + [Vitest](https://vitest.dev/) în [`frontend/App.test.tsx`](frontend/App.test.tsx).
+- E2E: [Playwright](https://playwright.dev/) în [`e2e/dashboard.spec.ts`](e2e/dashboard.spec.ts), rulat împotriva build-ului prin [`playwright.config.ts`](playwright.config.ts).
 
-## Arhitectură și flux de date
-
-În local, procesul Python servește `static/` și răspunde la `/api/tenders` și
-`/api/tenders/{id}`. React consumă API-ul și afișează badge-ul **API local**.
-Pe GitHub Pages build-ul este complet static: adapterul explicit din
-`frontend/demoData.ts` furnizează aceleași fixtures, iar badge-ul spune
-**Demo static**. Nu există fallback ascuns între moduri.
-
-## Pornire
-
-Necesită Python 3.12 și folosește doar biblioteca standard:
+## Moduri de rulare
 
 ```sh
-python -m tender_intelligence.api
+npm ci
+npm run dev
 ```
 
-Comanda servește UI-ul build-uit la `http://127.0.0.1:8000/`. Pentru dezvoltare
-React, în alt terminal: `npm ci && npm run dev`.
+Pentru producție statică și E2E:
 
-## Criteriu P1 → fișier → test
+```sh
+npm run build
+npm run preview
+npx playwright install chromium
+npm run test:e2e
+```
 
-| Criteriu | Implementare | Verificare |
-|---|---|---|
-| API local / Demo static vizibil | `frontend/App.tsx`, `demoData.ts` | `frontend/App.test.tsx` |
-| poartă 4/5 și 5/5 | `tender_intelligence/analysis.py` | `tests/test_core.py` |
-| bid comparison + empty state | `frontend/App.tsx` | `frontend/App.test.tsx` + build |
-| sursă, pagină, offset | `claims.py`, drawer în `App.tsx` | `tests/test_core.py` |
-| date sintetice și allowlist | `fixtures.py`, `security.py` | core tests + CI guard |
+Build-ul scrie în `static/`. Pe GitHub Pages, interfața folosește explicit
+adapterul static din [`frontend/demoData.ts`](frontend/demoData.ts) și afișează
+badge-ul „Demo static”. Local, aplicația poate folosi API-ul Python:
 
-## Test, live demo și limitări
+```sh
+python3 -m tender_intelligence.api
+```
 
-`./scripts/run_checks.sh` rulează compilarea Python, testele Python și React,
-type-check și build-ul static. Live demo este `npm run build`, urmat de
-`python3 -m tender_intelligence.api`. Nu sunt folosite date reale, documente
-reale, rețea, LLM sau afirmații despre munca vreunei instituții publice.
+## Verificare și publicare
 
-## Ce demonstrează
+[`frontend/App.test.tsx`](frontend/App.test.tsx) verifică încărcarea API-ului,
+poarta blocată, filtrarea, selecția și evidence drawer. Testul Playwright verifică
+aceleași interacțiuni pe viewport desktop și mobile, plus rolurile/etichetele de
+bază ale UI-ului.
 
-- filtrarea listei și detaliul unei licitații;
-- comparația exactă a trei oferte;
-- completitudinea documentelor și poarta blocată la 4/5, pregătită la 5/5;
-- afirmație citată cu ID-uri de dovezi, sursă, pagină, offset, încredere și
-  incertitudine;
-- escape pentru text și allowlist pentru schemele `fixture://`.
+Workflow-ul [CI](.github/workflows/ci.yml) rulează unittest Python, TypeScript
+check, unit tests, build, Playwright și guard-ul pentru conținut sintetic, apoi
+`npm audit --audit-level=high`. Workflow-ul de [GitHub Pages](.github/workflows/pages.yml)
+rămâne activ și publică directorul `static/`.
 
-Verificarea CI compilează Python, rulează testele unittest, caută URL-uri/date
-reale în conținut și verifică sintaxa JavaScript. Nu sunt incluse screenshot-uri.
+Nu sunt incluse GraphQL, Jest, Next.js sau React Native.

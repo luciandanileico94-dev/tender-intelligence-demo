@@ -14,6 +14,9 @@ jobs:
       - run: npm run check
       - run: npm test -- --run
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npm audit --audit-level=high
       - name: synthetic and secret guard
         run: |
           ! rg -nP 'https?://(?!127\.0\.0\.1)|api[_-]?key|token|password|@gmail|licitat' --glob '!package-lock.json' --glob '!*.md' --glob '!node_modules/**' --glob '!static/assets/**' .
