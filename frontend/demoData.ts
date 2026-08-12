@@ -1,34 +1,10 @@
-import type { Evidence, Offer, Requirement } from './types';
+import raw from '../shared/tenders.json';
+import type { CPV, Conclusion, Detail, EntityResult, Tender } from './types';
 
-export const opportunity = {
-  id: 'DEMO-MD-2026-014',
-  title: 'Platformă solară pentru campusul Albastru',
-  buyer: 'Municipiul Fictiv Nord',
-  deadline: '30 septembrie 2026',
-  budget: 240000,
-  fit: 'ridicat',
-  summary: 'Un caz demonstrativ pentru instalarea unei platforme solare într-un campus municipal. Dosarul este suficient de promițător pentru o verificare atentă înainte de a pregăti oferta.',
-};
-
-export const requirements: Requirement[] = [
-  { id: 'capacity', evidenceId: 'E-01', title: 'Capacitate minimă 180 kWp', detail: 'Oferta trebuie să acopere capacitatea tehnică indicată în caiet.', proof: 'Caiet tehnic, extras sintetic 01', risk: 'Fără dovadă, compatibilitatea tehnică rămâne incertă.' },
-  { id: 'delivery', evidenceId: 'E-02', title: 'Livrare în maximum 120 zile', detail: 'Calendarul propus trebuie să respecte fereastra de implementare.', proof: 'Calendar demonstrativ, extras sintetic 02', risk: 'Întârzierea poate afecta punctajul și planul de proiect.' },
-  { id: 'warranty', evidenceId: 'E-03', title: 'Garanție de minimum 5 ani', detail: 'Condiția comercială trebuie să apară explicit în oferta depusă.', proof: 'Cerințe comerciale, extras sintetic 03', risk: 'O condiție nesusținută poate deveni o neconformitate.' },
-  { id: 'team', evidenceId: 'E-04', title: 'Echipă locală de instalare', detail: 'Este necesară o echipă nominalizată pentru montaj și service.', proof: 'Anexă tehnică, extras sintetic 04', risk: 'Capacitatea de execuție nu este demonstrată încă.' },
-  { id: 'documents', evidenceId: 'E-05', title: 'Pachet de documente complet', detail: 'Declarația, fișa tehnică și referințele trebuie să fie disponibile.', proof: 'Listă documente, extras sintetic 05', risk: 'Lipsurile de formă pot bloca depunerea.' },
-];
-
-export const evidence: Evidence[] = [
-  { id: 'E-01', title: 'Caiet tehnic', kind: 'excerpt', page: 'extras 01', excerpt: 'Sistemul propus va avea o capacitate instalată de cel puțin 180 kWp.', note: 'Fragment creat pentru demo, fără fișier original și fără sursă externă.' },
-  { id: 'E-02', title: 'Calendar demonstrativ', kind: 'excerpt', page: 'extras 02', excerpt: 'Punerea în funcțiune este planificată în 120 zile de la ordinul de începere.', note: 'Fragment creat pentru demo, folosit ca dovadă de lucru.' },
-  { id: 'E-03', title: 'Cerințe comerciale', kind: 'excerpt', page: 'extras 03', excerpt: 'Perioada minimă de garanție pentru echipamente este de 60 luni.', note: 'Fragment creat pentru demo, nu reprezintă un document public.' },
-  { id: 'E-04', title: 'Anexă tehnică', kind: 'excerpt', page: 'extras 04', excerpt: 'Echipa de instalare va include roluri locale pentru montaj și intervenții.', note: 'Fragment creat pentru demo, fără persoane sau organizații reale.' },
-  { id: 'E-05', title: 'Listă de documente', kind: 'attachment', page: 'inventar sintetic', excerpt: 'Declarație de conformitate · fișă tehnică · referințe similare.', note: 'Atașament demonstrativ. Nu este un document încărcat de utilizator.' },
-];
-
-export const offers: Offer[] = [
-  { name: 'Echipa Fictivă A', price: 221000, fit: 88, delivery: 115, note: 'Preț echilibrat, cu o cerință de confirmat.' },
-  { name: 'Echipa Fictivă B', price: 234500, fit: 93, delivery: 105, note: 'Cel mai bun fit în scenariul inițial.' },
-];
-
-export const defaultRequirementStates = Object.fromEntries(requirements.map((item) => [item.id, 'proof'])) as Record<string, 'proof'>;
+type RawTender = typeof raw[number];
+export const demoTenders: Tender[] = (raw as RawTender[]).map((x:any) => ({...x, buyerId:x.buyer_id, documents:x.docs.map((d:any)=>({name:d[0],complete:d[1],source:`fixture://${x.id.toLowerCase()}/${d[0].toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}`,page:d[2],offset:d[2]*117,snippet:d[3]})), bids:x.bids.map((b:any)=>({firm:b[0],price_mdl:b[1],quality:b[2],delivery_days:b[3],status:b[4]}))}));
+export const cpvDomains: CPV[] = [...new Map(demoTenders.map(t=>[t.cpv.code,t.cpv])).values()];
+export const buyers = [...new Map(demoTenders.map(t=>[t.buyerId,{id:t.buyerId,name:t.buyer,pattern:`${demoTenders.filter(y=>y.buyerId===t.buyerId).length} proceduri în istoricul sintetic`}])).values()];
+export const companies = [...new Set(demoTenders.flatMap(t=>t.bids.map(b=>b.firm)))].map((name,i)=>({id:`SUP-SYN-${String(i+1).padStart(3,'0')}`,name, wins:demoTenders.filter(t=>t.bids.some(b=>b.firm===name&&b.status==='Câştigătoare')).length,focus:[...new Set(demoTenders.filter(t=>t.bids.some(b=>b.firm===name)).map(t=>t.cpv.code))].join(', ')}));
+export const detailFor=(t:Tender):Detail=>{const avg=t.bids.length?t.bids.reduce((a,b)=>a+b.price_mdl,0)/t.bids.length:t.value_mdl;const discount=Math.round((1-avg/t.value_mdl)*100);const source=t.documents[0]?.source||`fixture://${t.id.toLowerCase()}/dosar`;const conclusions:Conclusion[]=[{title:'Decizie explicabilă',text:`${t.decision}: potrivire ${t.fit}/100 şi risc ${t.risk}/100 în regula sintetică a dosarului.`,source,confidence:'Ridicată'},{title:'Presiune de preţ',text:t.bids.length?`Ofertele sunt în medie cu ${Math.max(0,discount)}% sub estimare.`:'Nu există oferte; presiunea de preţ nu poate fi estimată.',source,confidence:t.bids.length?'Medie':'Limitată'},{title:'Context de domeniu',text:`${t.cpv.name}. ${t.summary}`,source,confidence:'Medie'}];return {tender:t,checks:t.requirements.map((label,j)=>({label,value:j===0||t.documents.every(d=>d.complete),note:t.documents.every(d=>d.complete)?'Confirmat în documentul dosarului':'Necesită validare în dosarul furnizorului'})),evidence:t.documents,conclusions};};
+export const searchEntities=():EntityResult[]=>[...demoTenders.flatMap(t=>[...t.documents.map(d=>({kind:'Dovadă' as const,title:d.name,subtitle:`${t.id} · ${t.cpv.code} · ${d.snippet}`,tenderId:t.id})),...detailFor(t).conclusions.map(c=>({kind:'Analiză' as const,title:c.title,subtitle:`${t.id} · ${t.cpv.code} · ${c.text}`,tenderId:t.id}))]),...demoTenders.map(t=>({kind:'Procedură' as const,title:t.title,subtitle:`${t.id} · ${t.cpv.code} · ${t.cpv.name} · ${t.buyer}`,tenderId:t.id})),...buyers.map(b=>({kind:'Cumpărător' as const,title:b.name,subtitle:`${b.id} · istoric sintetic`,entityType:'buyer' as const,entityId:b.id})),...companies.map(c=>({kind:'Companie' as const,title:c.name,subtitle:`${c.id} · CPV ${c.focus} · participări sintetice`,entityType:'company' as const,entityId:c.id}))];

@@ -1,35 +1,55 @@
-# Tender Intelligence · demo static
+# Tender Intelligence
 
-Aceasta este o demonstrație publică, clean-room, a unui flux privat de analiză a unei oportunități de achiziție. Produsul complet poate centraliza informații publice și documente de ofertă, poate ajuta la revizuirea documentelor și OCR, extragerea cerințelor, legarea afirmațiilor de dovezi și analiza ofertanților, premiilor și riscurilor.
+Tender Intelligence este un cockpit de analiză pentru furnizori care vor să găsească, să evalueze şi să pregătească mai bine proceduri de achiziţie din orice domeniu CPV.
 
-## Scopul demo-ului
+[Deschide aplicaţia live](https://tender-intelligence-demo.vercel.app)
 
-Demo-ul urmărește un singur caz românesc sintetic, post-submission:
+![Radar multidomeniu şi dosar de procedură](docs/screenshots/opportunities-desktop.png)
 
-1. În spațiul „Astăzi”, analistul vede o oportunitate cu fit ridicat și acțiunea următoare.
-2. Deschide dosarul și trece între „Rezumat și decizie” și „Surse și fragmente”.
-3. Citește carduri cu fragmente vizibil sintetice, apoi marchează fiecare cerință ca „Verificat”, „Necesită dovadă” sau „Neîndeplinit”.
-4. Compară două oferte inventate. Pregătirea, riscul și fit-ul se recalculează din starea cerințelor.
-5. Lasă o notă locală și poate marca GO doar când toate cele cinci cerințe sunt verificate. NO-GO poate fi marcat oricând.
+## Ce rezolvă
 
-Toate numele, valorile, cerințele, fragmentele și referințele sunt inventate. Nu sunt folosite tendere, organizații, persoane, oferte sau documente reale și nu se execută crawling.
+- descoperire şi filtrare multidomeniu după cod CPV, cumpărător, stare şi decizie;
+- analiză documentară cu cerinţe, fragmente citate şi trasabilitate;
+- prioritizare explicabilă `GO / WATCH / NO-GO` după potrivire şi risc;
+- comparaţie între oferte pe preţ, calitate, livrare şi rezultat;
+- dosare pentru cumpărători şi companii, cu istoric şi mix CPV;
+- căutare comună în proceduri, dovezi, concluzii şi entităţi;
+- pipeline de lucru pentru evaluare, pregătire şi depunere.
 
-## Limitare statică exactă
+## Flux demonstrabil
 
-Aplicația este un build Vite static fără backend, API, scraping, OCR live, AI analysis, monitorizare în timp real sau sincronizare cu surse externe. Starea analistului și decizia sunt păstrate numai în `localStorage` al browserului. Butonul „Resetează demo” șterge starea locală prin revenirea la scenariul inițial. Este o demonstrație de flux, nu un serviciu operațional.
+1. Furnizorul identifică o oportunitate în radarul CPV.
+2. Deschide dosarul şi verifică cerinţele, riscurile şi ofertele concurente.
+3. Urmăreşte concluzia până la fragmentul care o susţine.
+4. Compară istoricul cumpărătorului şi al ofertanţilor.
+5. Mută procedura în pipeline-ul propriu de pregătire.
 
-## Stack și Vercel
+## Arhitectură şi tehnologii
 
-React, TypeScript, Redux Toolkit, Vite, Vitest și Playwright. Build-ul folosește `frontend/index.html` ca intrare și produce directorul static `static/`. Pe Vercel se poate folosi preset-ul Vite sau comanda `npm run build`, cu directorul de output `static`. Nu este necesară o funcție server.
+- React + TypeScript pentru interfaţa cockpit;
+- Redux Toolkit pentru selecţie, căutare şi sertarul de dovezi;
+- Vite pentru build-ul static şi deploy;
+- Python pentru adaptorul comun de date, analiză şi validarea surselor;
+- Vitest + Testing Library pentru comportamentul UI;
+- Playwright pentru scenarii desktop şi mobile;
+- GitHub Actions pentru verificări automate.
+
+Sursa comună [`shared/tenders.json`](shared/tenders.json) este consumată atât de interfaţă, cât şi de adaptorul Python. Astfel, codurile CPV, sumele MDL, documentele şi ofertele nu pot diverge între cele două implementări.
+
+## Datele ediţiei publice
+
+Ediţia publică include 12 proceduri active şi 6 proceduri istorice, distribuite în 12 domenii CPV. Companiile, cumpărătorii, ofertele, documentele şi concluziile sunt integral sintetice şi marcate `SYN`, `Fictiv` sau `Exemplu`. Codurile CPV sunt clasificatori publici reali, iar sursele locale acceptă numai schema strictă `fixture://syn-*`.
+
+Nu sunt incluse documente, contacte, identificatori sau date comerciale reale. Pipeline-ul este păstrat local în browser. Produsul complet poate integra surse autorizate, OCR, colaborare şi persistenţă server-side.
 
 ## Verificare locală
 
-```bash
+```sh
 npm ci
-npm test
 npm run check
-npm run build
+npm test -- --run
+PYTHONPATH=. pytest -q
 npm run test:e2e
 ```
 
-Pentru inspecție manuală: `npm run dev`, apoi deschide adresa locală afișată de Vite. Testează selectarea celor cinci stări, deschiderea unui fragment, o notă, GO, NO-GO, refresh-ul paginii și resetarea demo-ului.
+Scenariile E2E verifică filtrele CPV, dosarul procedurii, dovezile, pipeline-ul persistent, dosarele de entitate, istoricul, meniul mobil şi lipsa overflow-ului orizontal.
