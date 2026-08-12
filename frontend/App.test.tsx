@@ -1,45 +1,52 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { App } from './App';
+import { afterEach, beforeEach, expect, test } from 'vitest';
+import { App, decisionFor } from './App';
 import { Provider } from 'react-redux';
-import { clearSelection, setQuery, store } from './store';
+import { initialDemoState, resetDemo, store, STORAGE_KEY } from './store';
 
 const renderApp = () => render(<Provider store={store}><App /></Provider>);
 
-beforeEach(() => {
-  store.dispatch(clearSelection());
-  store.dispatch(setQuery(''));
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,json:async()=>[]}));
-});
+beforeEach(() => { localStorage.clear(); store.dispatch(resetDemo()); });
 afterEach(() => cleanup());
 
-test('loads local API and exposes a tender detail with blocked gate', async () => {
-  const user = userEvent.setup();
-  vi.mocked(fetch).mockResolvedValueOnce({ok:true,json:async()=>[{id:'SYN-RO-2026-001',title:'Dosar solar',buyer:'Orașul Fictiv Nord'}]} as Response)
-    .mockResolvedValueOnce({ok:true,json:async()=>({tender:{id:'SYN-RO-2026-001',title:'Dosar solar',buyer:'Orașul Fictiv Nord',deadline:'2026-09-30',value_eur:1},dossier:{checks:{identitate:true,calendar:true,buget:true,criterii:true,documente:false},score:4,max_score:5,gate:'blocked',label:'Blocat'},bids:[],completeness:{complete:0,total:0,items:[]},claim:{claim:'Afirmație sintetică',evidence_ids:[],confidence:'scăzută',uncertainty:'Demo',evidence:[]}})} as Response);
-  renderApp();
-  await user.click(await screen.findByRole('button', {name:/Dosar solar/}));
-  expect(await screen.findByText(/Blocat 4\/5/)).toBeInTheDocument();
+test('decision rules expose a blocked state until every requirement is verified', () => {
+  const start = decisionFor(initialDemoState);
+  expect(start.ready).toBe(false);
+  expect(start.unknown).toBe(5);
+  const next = { ...initialDemoState, requirements: { ...initialDemoState.requirements, capacity: 'verified' as const, delivery: 'verified' as const, warranty: 'verified' as const, team: 'verified' as const, documents: 'verified' as const } };
+  expect(decisionFor(next)).toMatchObject({ ready: true, score: 100, verified: 5 });
 });
 
-test('static demo filters, selects a tender, and opens an evidence drawer', async () => {
+test('analyst can verify requirements, see GO, save a note and persist the decision', async () => {
   const user = userEvent.setup();
   renderApp();
-  await user.click(screen.getByRole('button', {name:'Schimbă'}));
+  expect(screen.getByText('În verificare')).toBeInTheDocument();
+  for (const title of ['Capacitate minimă 180 kWp', 'Livrare în maximum 120 zile', 'Garanție de minimum 5 ani', 'Echipă locală de instalare', 'Pachet de documente complet']) {
+    await user.selectOptions(screen.getByLabelText(`Stare: ${title}`), 'verified');
+  }
+  expect(screen.getByText('GO posibil')).toBeInTheDocument();
+  const note = screen.getByLabelText('Notă locală pentru dosar');
+  await user.type(note, 'Confirmat cu echipa comercială.');
+  await user.click(screen.getByRole('button', { name: 'Marchează GO' }));
+  expect(screen.getByRole('button', { name: 'Marchează GO' })).toHaveClass('selected-go');
+  expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')).toMatchObject({ decision: 'go', note: 'Confirmat cu echipa comercială.' });
+});
 
-  const search = screen.getByRole('textbox', {name:'Caută în dosare'});
-  await user.type(search, 'solar');
-  expect(screen.getByRole('button', {name:/Sistem solar demonstrativ/})).toBeInTheDocument();
-  expect(screen.queryByRole('button', {name:/Mobilier modular/})).not.toBeInTheDocument();
+test('reset demo restores the initial requirement state', async () => {
+  const user = userEvent.setup();
+  renderApp();
+  await user.selectOptions(screen.getByLabelText('Stare: Capacitate minimă 180 kWp'), 'not_met');
+  await user.click(screen.getByRole('button', { name: 'Resetează demo' }));
+  expect(screen.getByLabelText('Stare: Capacitate minimă 180 kWp')).toHaveValue('proof');
+});
 
-  await user.click(screen.getByRole('button', {name:/Sistem solar demonstrativ/}));
-  expect(await screen.findByRole('heading', {name:/Sistem solar demonstrativ/})).toBeInTheDocument();
-  await user.click(screen.getByRole('button', {name:'E1'}));
-  expect(await screen.findByRole('heading', {name:'Caiet tehnic'})).toBeInTheDocument();
-  expect(screen.getByText('fixture://syn-001/caiet')).toBeInTheDocument();
-  expect(screen.getByRole('button', {name:'Închide'})).toBeInTheDocument();
-  await user.click(screen.getByRole('button', {name:'Închide'}));
-  expect(screen.queryByRole('heading', {name:'Caiet tehnic'})).not.toBeInTheDocument();
+test('sources tab opens a synthetic excerpt card', async () => {
+  const user = userEvent.setup();
+  renderApp();
+  await user.click(screen.getByRole('tab', { name: /Surse și fragmente/ }));
+  await user.click(screen.getByRole('button', { name: /Caiet tehnic/ }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('FRAGMENT SINTETIC');
+  expect(screen.getByText(/Fragment creat pentru demo/)).toBeInTheDocument();
 });
