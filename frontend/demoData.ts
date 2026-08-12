@@ -1,7 +1,34 @@
-import type { Detail, Tender } from './types';
+import type { Evidence, Offer, Requirement } from './types';
 
-export const demoTenders: Tender[] = [
-  { id:'SYN-RO-2026-001', title:'Sistem solar demonstrativ pentru campusul Albastru', buyer:'Orașul Fictiv Nord', status:'În evaluare', deadline:'2026-09-30', value_eur:240000, documents:[{name:'Caiet tehnic',complete:true,source:'fixture://syn-001/caiet',page:4,offset:118},{name:'Criterii de atribuire',complete:true,source:'fixture://syn-001/criterii',page:7,offset:203},{name:'Calendar livrare',complete:false,source:'fixture://syn-001/calendar',page:2,offset:55}], bids:[{firm:'Atelier Fictiv A',price_eur:221000,technical:88,delivery_days:120,documents:5},{firm:'Atelier Fictiv B',price_eur:234500,technical:93,delivery_days:105,documents:5},{firm:'Atelier Fictiv C',price_eur:209900,technical:79,delivery_days:150,documents:4}] },
-  { id:'SYN-RO-2026-002', title:'Mobilier modular pentru biblioteca Verde', buyer:'Comuna Fictivă Sud', status:'Publicat', deadline:'2026-10-12', value_eur:78000, documents:[{name:'Specificații',complete:true,source:'fixture://syn-002/spec',page:1,offset:12}], bids:[] },
+export const opportunity = {
+  id: 'DEMO-MD-2026-014',
+  title: 'Platformă solară pentru campusul Albastru',
+  buyer: 'Municipiul Fictiv Nord',
+  deadline: '30 septembrie 2026',
+  budget: 240000,
+  fit: 'ridicat',
+  summary: 'Un caz demonstrativ pentru instalarea unei platforme solare într-un campus municipal. Dosarul este suficient de promițător pentru o verificare atentă înainte de a pregăti oferta.',
+};
+
+export const requirements: Requirement[] = [
+  { id: 'capacity', evidenceId: 'E-01', title: 'Capacitate minimă 180 kWp', detail: 'Oferta trebuie să acopere capacitatea tehnică indicată în caiet.', proof: 'Caiet tehnic, extras sintetic 01', risk: 'Fără dovadă, compatibilitatea tehnică rămâne incertă.' },
+  { id: 'delivery', evidenceId: 'E-02', title: 'Livrare în maximum 120 zile', detail: 'Calendarul propus trebuie să respecte fereastra de implementare.', proof: 'Calendar demonstrativ, extras sintetic 02', risk: 'Întârzierea poate afecta punctajul și planul de proiect.' },
+  { id: 'warranty', evidenceId: 'E-03', title: 'Garanție de minimum 5 ani', detail: 'Condiția comercială trebuie să apară explicit în oferta depusă.', proof: 'Cerințe comerciale, extras sintetic 03', risk: 'O condiție nesusținută poate deveni o neconformitate.' },
+  { id: 'team', evidenceId: 'E-04', title: 'Echipă locală de instalare', detail: 'Este necesară o echipă nominalizată pentru montaj și service.', proof: 'Anexă tehnică, extras sintetic 04', risk: 'Capacitatea de execuție nu este demonstrată încă.' },
+  { id: 'documents', evidenceId: 'E-05', title: 'Pachet de documente complet', detail: 'Declarația, fișa tehnică și referințele trebuie să fie disponibile.', proof: 'Listă documente, extras sintetic 05', risk: 'Lipsurile de formă pot bloca depunerea.' },
 ];
-export function demoDetail(tender: Tender): Detail { const checks={identitate:!!tender.title&&!!tender.buyer,calendar:!!tender.deadline,buget:tender.value_eur>0,criterii:tender.documents.some(d=>d.name==='Criterii de atribuire'&&d.complete),documente:tender.documents.every(d=>d.complete)}; const score=Object.values(checks).filter(Boolean).length; const evidence=tender.documents; return {tender,dossier:{checks,score,max_score:5,gate:score===5?'ready':'blocked',label:score===5?'Pregătit':'Blocat'},bids:[...tender.bids].sort((a,b)=>a.price_eur-b.price_eur),completeness:{complete:evidence.filter(d=>d.complete).length,total:evidence.length,items:evidence},claim:{claim:`Dosarul ${tender.id} are ${tender.bids.length} oferte în comparație.`,evidence_ids:evidence.map((_,i)=>`E${i+1}`),confidence:evidence.length?'medie':'scăzută',uncertainty:'Date demonstrative; confirmarea documentelor rămâne necesară.',evidence}}; }
+
+export const evidence: Evidence[] = [
+  { id: 'E-01', title: 'Caiet tehnic', kind: 'excerpt', page: 'extras 01', excerpt: 'Sistemul propus va avea o capacitate instalată de cel puțin 180 kWp.', note: 'Fragment creat pentru demo, fără fișier original și fără sursă externă.' },
+  { id: 'E-02', title: 'Calendar demonstrativ', kind: 'excerpt', page: 'extras 02', excerpt: 'Punerea în funcțiune este planificată în 120 zile de la ordinul de începere.', note: 'Fragment creat pentru demo, folosit ca dovadă de lucru.' },
+  { id: 'E-03', title: 'Cerințe comerciale', kind: 'excerpt', page: 'extras 03', excerpt: 'Perioada minimă de garanție pentru echipamente este de 60 luni.', note: 'Fragment creat pentru demo, nu reprezintă un document public.' },
+  { id: 'E-04', title: 'Anexă tehnică', kind: 'excerpt', page: 'extras 04', excerpt: 'Echipa de instalare va include roluri locale pentru montaj și intervenții.', note: 'Fragment creat pentru demo, fără persoane sau organizații reale.' },
+  { id: 'E-05', title: 'Listă de documente', kind: 'attachment', page: 'inventar sintetic', excerpt: 'Declarație de conformitate · fișă tehnică · referințe similare.', note: 'Atașament demonstrativ. Nu este un document încărcat de utilizator.' },
+];
+
+export const offers: Offer[] = [
+  { name: 'Echipa Fictivă A', price: 221000, fit: 88, delivery: 115, note: 'Preț echilibrat, cu o cerință de confirmat.' },
+  { name: 'Echipa Fictivă B', price: 234500, fit: 93, delivery: 105, note: 'Cel mai bun fit în scenariul inițial.' },
+];
+
+export const defaultRequirementStates = Object.fromEntries(requirements.map((item) => [item.id, 'proof'])) as Record<string, 'proof'>;
