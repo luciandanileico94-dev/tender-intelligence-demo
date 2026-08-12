@@ -1,62 +1,49 @@
-# Tender Intelligence — demo sintetic (React + TypeScript)
+# Tender Intelligence — public edition
 
-Demonstrație clean-room pentru analiza unui dosar de achiziție. Toate datele
-sunt sintetice (`SYN-*`, cumpărători și firme „Fictiv”), iar sursele folosesc
-schema `fixture://`. Nu sunt folosite date private, secrete, servicii externe
-sau rețea în fluxul demo.
+Tender Intelligence este un cockpit B2B pentru intelligence de achiziții publice: dashboard-ul „Azi” prioritizează următoarea acțiune, radarul de oportunități ajută la decizia GO / WATCH / NO-GO, iar fiecare procedură are un dossier cu cerințe, documente, scoruri fit/risc, oferte comparate și dovezi citabile. Produsul include și pipeline-ul propriilor depuneri, căutare în evidence base, dosare de cumpărători și companii, pattern-uri de atribuire și sănătatea datelor.
 
-## Stack și arhitectură
+Live preview stabil: https://tender-intelligence-demo.vercel.app
 
-- UI: [React](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/), cu intrarea în [`frontend/main.tsx`](frontend/main.tsx) și componenta [`frontend/App.tsx`](frontend/App.tsx).
-- State cross-component: [Redux Toolkit](https://redux-toolkit.js.org/) — [store și slice](frontend/store.ts) gestionează filtrul, selecția dosarului și evidence drawer; acțiunile sunt folosite direct de UI.
-- API Python REST: [`tender_intelligence/api.py`](tender_intelligence/api.py) expune `GET /api/tenders` și `GET /api/tenders/{id}`. [Analiza criteriilor](tender_intelligence/analysis.py) și fixture-urile sunt locale.
-- Teste UI: [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) + [Vitest](https://vitest.dev/) în [`frontend/App.test.tsx`](frontend/App.test.tsx).
-- E2E: [Playwright](https://playwright.dev/) în [`e2e/dashboard.spec.ts`](e2e/dashboard.spec.ts), rulat împotriva build-ului prin [`playwright.config.ts`](playwright.config.ts).
+## Product capabilities vs public edition
 
-## Moduri de rulare
+Produsul real este gândit ca un workspace cu API REST Python, SQLite + FTS pentru căutare, ingestion de documente, OCR, analiză de cerințe, analytics și dosare colaborative.
+
+Această public edition este un build static React + TypeScript + Redux, alimentat de fixture-uri complet sintetice (`SYN-*`, nume „Exemplu/Fictiv” și `fixture://...`). Pipeline-ul persistă doar în `localStorage` browserului. Ingestion-ul live, OCR-ul, autentificarea, datele de contact, documentele reale și scrierile de rețea sunt dezactivate sau eliminate din build; pagina Sistem le afișează explicit ca limite/capabilități ale produsului. Nu pretinde că public deployment execută ingestion/OCR.
+
+## Architecture
+
+- Public UI: React + TypeScript + Redux Toolkit în [`frontend/App.tsx`](frontend/App.tsx), responsive desktop/mobile, Vite static mode.
+- Synthetic adapter: [`frontend/demoData.ts`](frontend/demoData.ts), cu șase proceduri, document snippets, cumpărători și companii sintetice.
+- Product-side Python REST/analysis: [`tender_intelligence/api.py`](tender_intelligence/api.py), [`tender_intelligence/analysis.py`](tender_intelligence/analysis.py), SQLite/fixture tooling; păstrat pentru verificări și integrarea locală unde rămâne coerent.
+- Tests: Vitest + React Testing Library pentru flows de UI și Playwright pentru desktop/mobile navigation, search, dossier, evidence și pipeline persistence.
+
+## Run locally
 
 ```sh
 npm ci
-npm run dev
-```
-
-Pentru producție statică și E2E:
-
-```sh
 VITE_DATA_MODE=static npm run build
 npm run preview
-npx playwright install chromium
-npm run test:e2e
 ```
 
-`VITE_DATA_MODE` este selectorul unic, ales la build, și acceptă `static` sau
-`local`. Preview-ul de producție, E2E și GitHub Pages îl setează la `static`,
-astfel încât interfața pornește direct cu date sintetice, fără request către
-`/api`. Dezvoltarea locală (`npm run dev`) rămâne în modul API (`local`), iar
-butonul „Schimbă” continuă să permită comutarea în UI. Build-ul scrie în
-`static/` și folosește adapterul static din [`frontend/demoData.ts`](frontend/demoData.ts).
-Local, aplicația poate folosi API-ul Python:
+Build-ul scrie în `static/`. Pentru dezvoltarea API-ului local, pornește separat `python3 -m tender_intelligence.api`; public preview-ul rulează static și nu face request-uri live.
+
+Checks:
 
 ```sh
-python3 -m tender_intelligence.api
+npm run check
+npm test -- --run
+npm run test:e2e
+pytest -q
 ```
 
-## Verificare și publicare
+## Screenshots
 
-[`frontend/App.test.tsx`](frontend/App.test.tsx) verifică încărcarea API-ului,
-poarta blocată, filtrarea, selecția și evidence drawer. Testul Playwright verifică
-aceleași interacțiuni pe viewport desktop și mobile, plus rolurile/etichetele de
-bază ale UI-ului.
+Capturile sunt generate din build-ul production static și arată dashboard-ul real al acestei ediții:
 
-### Capturi reale
+![Desktop cockpit](docs/screenshots/dashboard-desktop.png)
 
-Imaginile sunt capturi reale ale preview-ului static, pe viewport desktop și
-mobile, cu datele sintetice din demo: [`dashboard-desktop.png`](docs/screenshots/dashboard-desktop.png)
-și [`dashboard-mobile.png`](docs/screenshots/dashboard-mobile.png).
+![Mobile cockpit](docs/screenshots/dashboard-mobile.png)
 
-Workflow-ul [CI](.github/workflows/ci.yml) rulează unittest Python, TypeScript
-check, unit tests, build, Playwright și guard-ul pentru conținut sintetic, apoi
-`npm audit --audit-level=high`. Workflow-ul de [GitHub Pages](.github/workflows/pages.yml)
-rămâne activ și publică directorul `static/`.
+## Data hygiene
 
-Nu sunt incluse GraphQL, Jest, Next.js sau React Native.
+Repository-ul public nu conține date private, contacte, documente reale, URL-uri documentare reale, buyer IDs reale sau secrete. Toate sursele vizibile folosesc schema `fixture://`. `.gitignore` este păstrat, iar CI verifică build-ul, testele, fixture-urile sintetice și auditul dependințelor.

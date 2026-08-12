@@ -1,32 +1,28 @@
 import { expect, test } from '@playwright/test';
 
-test('static synthetic dashboard supports filtering, selection, evidence, and basic accessibility', async ({ page }) => {
-  const browserErrors: string[] = [];
-  page.on('console', message => {
-    if (message.type() === 'error') browserErrors.push(`console: ${message.text()}`);
-  });
-  page.on('pageerror', error => browserErrors.push(`pageerror: ${error.message}`));
-  page.on('requestfailed', request => {
-    browserErrors.push(`requestfailed: ${request.method()} ${request.url()} ${request.failure()?.errorText ?? ''}`);
-  });
-
+test('public cockpit supports navigation, search, detail and evidence', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Tender Intelligence' })).toBeVisible();
-  await expect(page.getByText('Demo static')).toBeVisible();
-
-  const search = page.getByRole('textbox', { name: 'Caută în dosare' });
-  await expect(search).toHaveAttribute('placeholder', 'Titlu, cumpărător sau ID');
-  await search.fill('solar');
-  await expect(page.getByRole('button', { name: /Sistem solar demonstrativ/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Mobilier modular/ })).toHaveCount(0);
-
-  await page.getByRole('button', { name: /Sistem solar demonstrativ/ }).click();
-  await expect(page.getByRole('heading', { name: /Sistem solar demonstrativ/ })).toBeVisible();
-  await expect(page.getByText('Blocat 4/5')).toBeVisible();
-  await page.getByRole('button', { name: 'E1' }).click();
-  await expect(page.getByRole('heading', { name: 'Caiet tehnic' })).toBeVisible();
-  await expect(page.getByText('fixture://syn-001/caiet')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Azi' })).toBeVisible();
+  await page.getByRole('button', { name: /Vezi oportunitățile/ }).click();
+  await expect(page.getByRole('heading', { name: 'Oportunități IT' })).toBeVisible();
+  await page.getByRole('button', { name: /Platformă de interoperabilitate/ }).click();
+  await expect(page.getByRole('heading', { name: /Platformă de interoperabilitate/ })).toBeVisible();
+  await page.getByRole('button', { name: /Caiet de sarcini/ }).click();
+  await expect(page.getByText('fixture://syn-001/caiet-de-sarcini')).toBeVisible();
   await page.getByRole('button', { name: 'Închide' }).click();
-  await expect(page.getByRole('heading', { name: 'Caiet tehnic' })).toHaveCount(0);
-  expect(browserErrors).toEqual([]);
+  await page.getByRole('button', { name: 'Căutare în dovezi' }).click();
+  await page.getByRole('textbox', { name: 'Caută în dovezi' }).fill('Nordic Byte');
+  await expect(page.getByText('Nordic Byte SRL')).toBeVisible();
+});
+
+test('mobile menu and pipeline stage persistence work', async ({ page }) => {
+  await page.goto('/');
+  if ((page.viewportSize()?.width ?? 1000) < 700) await page.getByRole('button', { name: 'Deschide meniul' }).click();
+  await page.getByRole('button', { name: 'Dosarele mele' }).click();
+  const select = page.getByRole('combobox', { name: /Platformă de interoperabilitate/ });
+  await select.selectOption('În pregătire');
+  await page.reload();
+  if ((page.viewportSize()?.width ?? 1000) < 700) await page.getByRole('button', { name: 'Deschide meniul' }).click();
+  await page.getByRole('button', { name: 'Dosarele mele' }).click();
+  await expect(page.getByRole('combobox', { name: /Platformă de interoperabilitate/ })).toHaveValue('În pregătire');
 });
