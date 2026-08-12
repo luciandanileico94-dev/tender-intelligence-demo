@@ -4,15 +4,15 @@ test('public cockpit supports navigation, search, detail and evidence', async ({
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Azi' })).toBeVisible();
   await page.getByRole('button', { name: /Vezi oportunitățile/ }).click();
-  await expect(page.getByRole('heading', { name: 'Oportunități IT' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Oportunități' })).toBeVisible();
   await page.getByRole('button', { name: /Platformă de interoperabilitate/ }).click();
   await expect(page.getByRole('heading', { name: /Platformă de interoperabilitate/ })).toBeVisible();
   await page.getByRole('button', { name: /Caiet de sarcini/ }).click();
-  await expect(page.getByText('fixture://syn-001/caiet-de-sarcini')).toBeVisible();
+  await expect(page.getByText('fixture://syn-1/caiet-de-sarcini')).toBeVisible();
   await page.getByRole('button', { name: 'Închide' }).click();
   await page.getByRole('button', { name: 'Căutare în dovezi' }).click();
   await page.getByRole('textbox', { name: 'Caută în dovezi' }).fill('Nordic Byte');
-  await expect(page.getByText('Nordic Byte SRL')).toBeVisible();
+  await expect(page.getByText('Nordic Byte Fictiv SRL')).toBeVisible();
 });
 
 test('mobile menu and pipeline stage persistence work', async ({ page }) => {

@@ -1,49 +1,43 @@
-# Tender Intelligence — public edition
+# Tender Intelligence
 
-Tender Intelligence este un cockpit B2B pentru intelligence de achiziții publice: dashboard-ul „Azi” prioritizează următoarea acțiune, radarul de oportunități ajută la decizia GO / WATCH / NO-GO, iar fiecare procedură are un dossier cu cerințe, documente, scoruri fit/risc, oferte comparate și dovezi citabile. Produsul include și pipeline-ul propriilor depuneri, căutare în evidence base, dosare de cumpărători și companii, pattern-uri de atribuire și sănătatea datelor.
+Tender Intelligence este un cockpit intern pentru furnizori care caută, compară și pregătesc participarea la achiziții publice din orice domeniu CPV. Dashboard-ul prioritizează acțiunea următoare, radarul arată oportunități active, iar fiecare procedură leagă cerințele, documentele, ofertele, tiparele de preț și decizia GO / WATCH / NO-GO de dovezi citabile. Dossiers interactive pentru cumpărători și companii arată recurența, participările, concurenții și istoricul procedurilor.
 
-Live preview stabil: https://tender-intelligence-demo.vercel.app
+## Ce oferă produsul
 
-## Product capabilities vs public edition
+- detectare timpurie a oportunităților pe cod și denumire CPV;
+- mapare a cerințelor și documentelor cu evidența sursei;
+- comparație competitor / preț / calitate și identificarea riscului de demping;
+- tipare de cumpărare și recurență la buyer;
+- prioritizare explicabilă GO / WATCH / NO-GO;
+- task-uri, leads și submissions urmărite în pipeline;
+- trasabilitate pentru fiecare concluzie.
 
-Produsul real este gândit ca un workspace cu API REST Python, SQLite + FTS pentru căutare, ingestion de documente, OCR, analiză de cerințe, analytics și dosare colaborative.
+## Ediție publică și limite
 
-Această public edition este un build static React + TypeScript + Redux, alimentat de fixture-uri complet sintetice (`SYN-*`, nume „Exemplu/Fictiv” și `fixture://...`). Pipeline-ul persistă doar în `localStorage` browserului. Ingestion-ul live, OCR-ul, autentificarea, datele de contact, documentele reale și scrierile de rețea sunt dezactivate sau eliminate din build; pagina Sistem le afișează explicit ca limite/capabilități ale produsului. Nu pretinde că public deployment execută ingestion/OCR.
+Această EDIȚIE PUBLICĂ este un build static React + TypeScript + Redux. Toate companiile, cumpărătorii, procedurile, ofertele și rezultatele sunt sintetice și marcate SYN/Fictiv/Exemplu; sursele sunt exclusiv `fixture://`. Codurile și denumirile CPV sunt taxonomie oficială publică, singurele date reale folosite.
 
-## Architecture
+Produsul complet poate integra ingestion, OCR, analiză documentară, căutare persistentă, colaborare și surse autorizate. Ediția publică nu face ingestion live, nu conține documente sau contacte reale, nu execută scrieri de rețea și păstrează pipeline-ul doar în `localStorage`. Nu sunt prezentate statistici reale de piață.
 
-- Public UI: React + TypeScript + Redux Toolkit în [`frontend/App.tsx`](frontend/App.tsx), responsive desktop/mobile, Vite static mode.
-- Synthetic adapter: [`frontend/demoData.ts`](frontend/demoData.ts), cu șase proceduri, document snippets, cumpărători și companii sintetice.
-- Product-side Python REST/analysis: [`tender_intelligence/api.py`](tender_intelligence/api.py), [`tender_intelligence/analysis.py`](tender_intelligence/analysis.py), SQLite/fixture tooling; păstrat pentru verificări și integrarea locală unde rămâne coerent.
-- Tests: Vitest + React Testing Library pentru flows de UI și Playwright pentru desktop/mobile navigation, search, dossier, evidence și pipeline persistence.
+## Arhitectură
 
-## Run locally
+- UI: React + TypeScript + Redux Toolkit + Vite în [`frontend/App.tsx`](frontend/App.tsx).
+- Date sintetice concise și derivări: [`frontend/demoData.ts`](frontend/demoData.ts).
+- Analiză și adapter Python păstrate pentru verificări: [`tender_intelligence/`](tender_intelligence/).
+- Teste: Vitest / React Testing Library, Playwright desktop și mobile, pytest.
+
+## Rulare și verificări
 
 ```sh
 npm ci
-VITE_DATA_MODE=static npm run build
-npm run preview
-```
-
-Build-ul scrie în `static/`. Pentru dezvoltarea API-ului local, pornește separat `python3 -m tender_intelligence.api`; public preview-ul rulează static și nu face request-uri live.
-
-Checks:
-
-```sh
 npm run check
 npm test -- --run
+npm run build
 npm run test:e2e
 pytest -q
 ```
 
-## Screenshots
+Capturile din `docs/screenshots/` sunt artefacte existente ale clonei. Pentru capturi production proaspete, pornește `npm run build && npm run preview`, apoi folosește Playwright în mediul browser disponibil.
 
-Capturile sunt generate din build-ul production static și arată dashboard-ul real al acestei ediții:
+## Igiena datelor
 
-![Desktop cockpit](docs/screenshots/dashboard-desktop.png)
-
-![Mobile cockpit](docs/screenshots/dashboard-mobile.png)
-
-## Data hygiene
-
-Repository-ul public nu conține date private, contacte, documente reale, URL-uri documentare reale, buyer IDs reale sau secrete. Toate sursele vizibile folosesc schema `fixture://`. `.gitignore` este păstrat, iar CI verifică build-ul, testele, fixture-urile sintetice și auditul dependințelor.
+Repository-ul nu conține companii reale, contacte, ID-uri reale, documente reale, secrete sau surse HTTP. ID-urile sunt `SYN-*` / `BUY-SYN-*` / `SUP-SYN-*`, iar numele de business conțin Fictiv sau Exemplu.
