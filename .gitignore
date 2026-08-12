@@ -1,0 +1,15 @@
+# Python local artifacts
+.venv/
+__pycache__/
+*.egg-info/
+
+# Node dependencies
+/node_modules/
+/frontend/node_modules/
+
+# Playwright reports
+/test-results/
+/playwright-report/
+
+# Vite build output (existing tracked files remain tracked)
+/static/
