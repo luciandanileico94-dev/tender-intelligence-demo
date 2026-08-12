@@ -5,13 +5,13 @@ import type { Detail, Tender } from './types';
 import { clearSelection, closeEvidence, openEvidence, selectTender, setQuery, type AppDispatch, type RootState } from './store';
 
 const money = (n:number) => new Intl.NumberFormat('ro-RO',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
-const isPages = typeof window !== 'undefined' && window.location.hostname.endsWith('github.io');
+const dataMode = import.meta.env.VITE_DATA_MODE === 'static' ? 'static' : 'local';
 const labels:Record<string,string> = {identitate:'Identitate',calendar:'Calendar',buget:'Buget',criterii:'Criterii',documente:'Documente'};
 
 export function App() {
   const dispatch = useDispatch<AppDispatch>();
   const { query, selectedTenderId, evidenceIndex } = useSelector((state: RootState) => state.dashboard);
-  const [tenders,setTenders]=useState<Tender[]>([]); const [detail,setDetail]=useState<Detail|null>(null); const [mode,setMode]=useState<'local'|'static'>(isPages?'static':'local'); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+  const [tenders,setTenders]=useState<Tender[]>([]); const [detail,setDetail]=useState<Detail|null>(null); const [mode,setMode]=useState<'local'|'static'>(dataMode); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
   useEffect(()=>{ if(mode==='static'){setTenders(demoTenders);setLoading(false);return;} setLoading(true); fetch('/api/tenders').then(r=>{if(!r.ok)throw Error('API indisponibilă');return r.json()}).then(setTenders).catch(e=>setError(`Nu pot contacta API-ul local: ${e.message}`)).finally(()=>setLoading(false)); },[mode]);
   const filtered=useMemo(()=>tenders.filter(t=>`${t.id} ${t.title} ${t.buyer}`.toLowerCase().includes(query.toLowerCase())),[tenders,query]);
   useEffect(() => {

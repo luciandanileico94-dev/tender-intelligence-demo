@@ -23,15 +23,19 @@ npm run dev
 Pentru producție statică și E2E:
 
 ```sh
-npm run build
+VITE_DATA_MODE=static npm run build
 npm run preview
 npx playwright install chromium
 npm run test:e2e
 ```
 
-Build-ul scrie în `static/`. Pe GitHub Pages, interfața folosește explicit
-adapterul static din [`frontend/demoData.ts`](frontend/demoData.ts) și afișează
-badge-ul „Demo static”. Local, aplicația poate folosi API-ul Python:
+`VITE_DATA_MODE` este selectorul unic, ales la build, și acceptă `static` sau
+`local`. Preview-ul de producție, E2E și GitHub Pages îl setează la `static`,
+astfel încât interfața pornește direct cu date sintetice, fără request către
+`/api`. Dezvoltarea locală (`npm run dev`) rămâne în modul API (`local`), iar
+butonul „Schimbă” continuă să permită comutarea în UI. Build-ul scrie în
+`static/` și folosește adapterul static din [`frontend/demoData.ts`](frontend/demoData.ts).
+Local, aplicația poate folosi API-ul Python:
 
 ```sh
 python3 -m tender_intelligence.api
@@ -43,6 +47,12 @@ python3 -m tender_intelligence.api
 poarta blocată, filtrarea, selecția și evidence drawer. Testul Playwright verifică
 aceleași interacțiuni pe viewport desktop și mobile, plus rolurile/etichetele de
 bază ale UI-ului.
+
+### Capturi reale
+
+Imaginile sunt capturi generate din preview-ul static build-uit, pe viewport
+desktop și mobile, cu datele sintetice din demo: [`dashboard-desktop.png`](docs/screenshots/dashboard-desktop.png)
+și [`dashboard-mobile.png`](docs/screenshots/dashboard-mobile.png).
 
 Workflow-ul [CI](.github/workflows/ci.yml) rulează unittest Python, TypeScript
 check, unit tests, build, Playwright și guard-ul pentru conținut sintetic, apoi
